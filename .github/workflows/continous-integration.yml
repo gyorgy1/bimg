@@ -11,46 +11,40 @@ on:
       - 'README.md'
 
 env:
-  VIPS_VERSIONS: |
-    ["8.10.6", "8.11.4", "8.12.2", "8.13.3", "8.14.5", "8.15.5", "8.16.0"]
+  GOLANGCILINT_VERSION: "1.63.4"
 
 jobs:
-  prepareTestContainer:
-    name: Prepare test containers
-    runs-on: ubuntu-latest
-    outputs:
-      versions: ${{ steps.build.outputs.versions }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Cache Docker layers
-        uses: satackey/action-docker-layer-caching@v0.0.11
-        continue-on-error: true
-        with:
-          key: testcontainers-${{ hashFiles('Dockerfile') }}
-      - name: Build
-        id: build
-        run: |
-          echo ${VIPS_VERSIONS} | jq -c -r ".[]" | while read version; do
-            echo "Building for VIPS $version"
-            docker build --build-arg VIPS_VERSION=$version -t h2non/bimg:ci-$version . || exit 1
-          done
-          echo ::set-output name=versions::${VIPS_VERSIONS}
-
   test:
     name: Test
     runs-on: ubuntu-latest
-    needs: [ prepareTestContainer ]
     strategy:
       matrix:
-        libvips: ${{ fromJSON(needs.prepareTestContainer.outputs.versions) }}
+        container-with-vips: [
+          "alpine3-14.vips8-10-6",
+          "alpine3-16.vips8-12-2",
+          "alpine3-17.vips8-13-3",
+          "alpine3-18.vips8-14-3",
+          "alpine3-21.vips8-15-3"
+        ]
       fail-fast: false
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Cache Docker layers
-        uses: satackey/action-docker-layer-caching@v0.0.11
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and export to Docker
+        uses: docker/build-push-action@v6
         with:
-          key: testcontainers-${{ hashFiles('Dockerfile') }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max`
+          load: true
+          build-args: |
+            GOLANGCILINT_VERSION=${{ env.GOLANGCILINT_VERSION }}
+          file: Dockerfile.${{ matrix.container-with-vips }}
+          tags: h2non/bimg:ci-${{ matrix.container-with-vips }}
+
       - name: Run tests
-        run: docker run --rm -v $PWD:/build h2non/bimg:ci-${{ matrix.libvips }} sh -c 'cd /build && go vet . && golangci-lint run && go test -v -race -covermode=atomic -coverprofile=coverage.out'
+        run: |
+          docker run --rm -v $PWD:/build h2non/bimg:ci-${{ matrix.container-with-vips }} sh -c 'cd /build && go vet . && golangci-lint run && go test -v -race -covermode=atomic -coverprofile=coverage.out'
