@@ -20,6 +20,7 @@ func TestDeterminateImageType(t *testing.T) {
 		{"test.pdf", PDF, true},
 		{"test.svg", SVG, true},
 		{"test.jp2", JP2K, vipsVersionMin(8, 11)},
+		{"test.jxl", JXL, vipsVersionMin(8, 11)},
 		{"test.heic", HEIF, true},
 		{"test2.heic", HEIF, true},
 		{"test3.heic", HEIF, true},
@@ -59,6 +60,7 @@ func TestDeterminateImageTypeName(t *testing.T) {
 		{"test.pdf", "pdf", true},
 		{"test.svg", "svg", true},
 		{"test.jp2", "jp2k", vipsVersionMin(8, 11)},
+		{"test.jxl", "jxl", vipsVersionMin(8, 11)},
 		{"test.heic", "heif", true},
 		{"test.avif", "avif", true},
 		{"test.bmp", "magick", true},
@@ -96,6 +98,7 @@ func TestIsTypeSupported(t *testing.T) {
 		{HEIF, true},
 		{AVIF, true},
 		{JP2K, vipsVersionMin(8, 11)},
+		{JXL, vipsVersionMin(8, 11)},
 	}
 
 	for _, typ := range types {
@@ -121,6 +124,7 @@ func TestIsTypeNameSupported(t *testing.T) {
 		{"heif", true, true},
 		{"avif", true, true},
 		{"jp2k", true, vipsVersionMin(8, 11)},
+		{"jxl", true, vipsVersionMin(8, 11)},
 	}
 
 	for _, n := range types {
@@ -140,7 +144,10 @@ func TestIsTypeSupportedSave(t *testing.T) {
 		JPEG, PNG, WEBP, TIFF, HEIF, AVIF,
 	}
 	if vipsVersionMin(8, 11) {
-		types = append(types, JP2K)
+		types = append(types, JP2K, JXL)
+	}
+	if vipsVersionMin(8, 12) {
+		types = append(types, GIF)
 	}
 
 	for _, tt := range types {
@@ -164,6 +171,7 @@ func TestIsTypeNameSupportedSave(t *testing.T) {
 		{"heif", true},
 		{"avif", true},
 		{"jp2k", vipsVersionMin(8, 11)},
+		{"jxl", vipsVersionMin(8, 11)},
 	}
 
 	for _, n := range types {

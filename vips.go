@@ -64,6 +64,8 @@ const (
 	AVIF ImageType = C.AVIF
 	// JP2K represents the JPEG 2000 image type.
 	JP2K ImageType = C.JP2K
+	// JXL represents the JPEG XL image type.
+	JXL ImageType = C.JXL
 	// MAGICK represents the libmagick compatible generic image type.
 	MAGICK ImageType = C.MAGICK
 )
@@ -519,6 +521,8 @@ func vipsSave(image *vipsImage, o vipsSaveOptions) ([]byte, error) {
 		saveErr = C.vips_avifsave_bridge(image.c, &ptr, &length, strip, quality, lossless, speed)
 	case JP2K:
 		saveErr = C.vips_jp2ksave_bridge(image.c, &ptr, &length, strip, quality, lossless)
+	case JXL:
+		saveErr = C.vips_jxlsave_bridge(image.c, &ptr, &length, strip, quality, lossless)
 	case MAGICK:
 		formatString := C.CString(o.MagickFormat)
 		defer C.free(unsafe.Pointer(formatString))
@@ -543,7 +547,7 @@ func vipsSave(image *vipsImage, o vipsSaveOptions) ([]byte, error) {
 func vipsExtract(image *vipsImage, left, top, width, height int) (*vipsImage, error) {
 	var out *C.VipsImage
 
-	if width > MaxSize || height > MaxSize {
+	if width > maxSize || height > maxSize {
 		return nil, errors.New("maximum image size exceeded")
 	}
 
@@ -559,7 +563,7 @@ func vipsExtract(image *vipsImage, left, top, width, height int) (*vipsImage, er
 func vipsSmartCrop(image *vipsImage, width, height int) (*vipsImage, error) {
 	var out *C.VipsImage
 
-	if width > MaxSize || height > MaxSize {
+	if width > maxSize || height > maxSize {
 		return nil, errors.New("maximum image size exceeded")
 	}
 
@@ -619,9 +623,9 @@ func vipsShrinkWebp(buf []byte, shrink int) (*vipsImage, error) {
 	return wrapVipsImage(image), nil
 }
 
-func vipsResize(input *vipsImage, xscale, yscale float64) (*vipsImage, error) {
+func vipsResize(input *vipsImage, xscale, yscale float64, kernel Kernel) (*vipsImage, error) {
 	var image *C.VipsImage
-	err := C.vips_resize_bridge(input.c, &image, C.double(xscale), C.double(yscale))
+	err := C.vips_resize_bridge(input.c, &image, C.double(xscale), C.double(yscale), C.int(kernel))
 	if err != 0 {
 		return nil, catchVipsError()
 	}
@@ -775,6 +779,16 @@ func vipsImageType(buf []byte) ImageType {
 		buf[8] == 0x61 && buf[9] == 0x76 && buf[10] == 0x69 && buf[11] == 0x66 {
 		return AVIF
 	}
+	if IsTypeSupported(JXL) && buf[0] == 0xFF && buf[1] == 0x0A {
+		// This is naked jxl file header
+		return JXL
+	}
+	if IsTypeSupported(JXL) && buf[0] == 0x0 && buf[1] == 0x0 && buf[2] == 0x0 && buf[3] == 0x0C &&
+		buf[4] == 0x4A && buf[5] == 0x58 && buf[6] == 0x4C && buf[7] == 0x20 &&
+		buf[8] == 0x0D && buf[9] == 0x0A && buf[10] == 0x87 && buf[11] == 0x0A {
+		// This is an ISOBMFF-based container
+		return JXL
+	}
 
 	return UNKNOWN
 }
@@ -849,6 +863,26 @@ func vipsGamma(image *vipsImage, Gamma float64) (*vipsImage, error) {
 	var out *C.VipsImage
 
 	err := C.vips_gamma_bridge(image.c, &out, C.double(Gamma))
+	if err != 0 {
+		return nil, catchVipsError()
+	}
+	return wrapVipsImage(out), nil
+}
+
+func vipsBrightness(image *vipsImage, brightness float64) (*vipsImage, error) {
+	var out *C.VipsImage
+
+	err := C.vips_brightness_bridge(image.c, &out, C.double(brightness))
+	if err != 0 {
+		return nil, catchVipsError()
+	}
+	return wrapVipsImage(out), nil
+}
+
+func vipsContrast(image *vipsImage, contrast float64) (*vipsImage, error) {
+	var out *C.VipsImage
+
+	err := C.vips_contrast_bridge(image.c, &out, C.double(contrast))
 	if err != 0 {
 		return nil, catchVipsError()
 	}

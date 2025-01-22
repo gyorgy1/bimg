@@ -5,13 +5,31 @@ package bimg
 #include "vips/vips.h"
 */
 import "C"
+import "errors"
 
 const (
 	// Quality defines the default JPEG quality to be used.
 	Quality = 75
-	// MaxSize defines the maximum pixels width or height supported.
-	MaxSize = 16383
 )
+
+// maxSize defines maximum pixels width or height supported.
+var maxSize = 16383
+
+// MaxSize returns maxSize.
+func MaxSize() int {
+	return maxSize
+}
+
+// SetMaxSize sets maxSize.
+func SetMaxsize(s int) error {
+	if s <= 0 {
+		return errors.New("Size must be higher than zero.")
+	}
+
+	maxSize = s
+
+	return nil
+}
 
 // Gravity represents the image gravity value.
 type Gravity int
@@ -43,6 +61,34 @@ const (
 	Nohalo
 	// Nearest neighbour interpolation value.
 	Nearest
+)
+
+// resampling kernels
+type Kernel int
+
+const (
+	//The default chosen by VIPS.
+	DefaultKernel Kernel = iota
+
+	//The nearest pixel to the point.
+	NearestKernel
+
+	//Convolve with a triangle filter.
+	LinearKernel
+
+	//Convolve with a cubic filter.
+	CubicKernel
+
+	//Convolve with a Mitchell kernel.
+	MitchellKernel
+
+	//Convolve with a two-lobe Lanczos kernel.
+	Lanczos2Kernel
+
+	//Convolve with a three-lobe Lanczos kernel.
+	Lanczos3Kernel
+
+	LastKernel
 )
 
 var interpolations = map[Interpolator]string{

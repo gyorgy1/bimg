@@ -27,6 +27,7 @@ enum types {
 	HEIF,
 	AVIF,
 	JP2K,
+	JXL,
 	MAGICK
 };
 
@@ -104,6 +105,8 @@ vips_type_find_load_bridge(int t) {
 #if (VIPS_VERSION_MIN(8, 11))
 		case JP2K:
 			return vips_type_find("VipsOperation", "jp2kload");
+		case JXL:
+			return vips_type_find("VipsOperation", "jxlload");
 #endif
 		case MAGICK:
 			return vips_type_find("VipsOperation", "magickload");
@@ -130,6 +133,8 @@ vips_type_find_save_bridge(int t) {
 #if (VIPS_VERSION_MIN(8, 11))
 		case JP2K:
 			return vips_type_find("VipsOperation", "jp2ksave_buffer");
+		case JXL:
+			return vips_type_find("VipsOperation", "jxlsave_buffer");
 #endif
 		case MAGICK:
 			return vips_type_find("VipsOperation", "magicksave_buffer");
@@ -236,6 +241,19 @@ vips_jp2ksave_bridge(VipsImage *in, void **buf, size_t *len, int strip, int qual
 #endif
 }
 
+int vips_jxlsave_bridge(VipsImage *in, void **buf, size_t *len, int strip, int quality, int lossless) {
+#if (VIPS_VERSION_MIN(8, 11))
+    return vips_jxlsave_buffer(in, buf, len,
+    	"strip", INT_TO_GBOOLEAN(strip),
+    	"Q", quality,
+        "lossless", INT_TO_GBOOLEAN(lossless),
+        NULL
+    );
+#else
+	return 0;
+#endif
+}
+
 static unsigned long
 has_profile_embed(VipsImage *image) {
 	return vips_image_get_typeof(image, VIPS_META_ICC_NAME);
@@ -276,8 +294,12 @@ vips_flip_bridge(VipsImage *in, VipsImage **out, int direction) {
 }
 
 int
-vips_resize_bridge(VipsImage *in, VipsImage **out, double xscale, double yscale) {
-	return vips_resize(in, out, xscale, "vscale", yscale, NULL);
+vips_resize_bridge(VipsImage *in, VipsImage **out, double xscale, double yscale, int kernel) {
+    if (kernel > 0) {
+	    return vips_resize(in, out, xscale, "vscale", yscale, "kernel", kernel-1, NULL);
+	} else {
+        return vips_resize(in, out, xscale, "vscale", yscale, NULL);
+	}
 }
 
 int
@@ -581,4 +603,14 @@ int vips_gamma_bridge(VipsImage *in, VipsImage **out, double exponent) {
 
 int vips_addalpha_bridge(VipsImage *in, VipsImage **out) {
 	return vips_addalpha(in, out);
+}
+
+int vips_brightness_bridge(VipsImage *in, VipsImage **out, double k)
+{
+    return vips_linear1(in, out, 1.0 , k, NULL);
+}
+
+int vips_contrast_bridge(VipsImage *in, VipsImage **out, double k)
+{
+    return vips_linear1(in, out, k , 0.0, NULL);
 }

@@ -23,6 +23,7 @@ var ImageTypes = map[ImageType]string{
 	HEIF:   "heif",
 	AVIF:   "avif",
 	JP2K:   "jp2k",
+	JXL:    "jxl",
 	MAGICK: "magick",
 }
 

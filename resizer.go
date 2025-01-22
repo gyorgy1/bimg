@@ -21,7 +21,7 @@ func resizeImage(image *vipsImage, o ResizeOptions) (*vipsImage, error) {
 	xscale := float64(o.Width) / float64(image.c.Xsize)
 	yscale := float64(o.Height) / float64(image.c.Ysize)
 
-	return vipsResize(image, xscale, yscale)
+	return vipsResize(image, xscale, yscale, o.Kernel)
 }
 
 func watermarkImageWithText(image *vipsImage, w WatermarkOptions) (*vipsImage, error) {

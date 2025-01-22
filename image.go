@@ -115,6 +115,7 @@ type ResizeOptions struct {
 	Zoom           int
 	Mode           ResizeMode
 	Interpolator   Interpolator
+	Kernel         Kernel
 	Interpretation Interpretation
 }
 
@@ -174,7 +175,8 @@ func calculateResizeFactor(opts *ResizeOptions, inWidth, inHeight int) float64 {
 // dimensions of the image.
 //
 // If only Height or Width is specified, the other is calculated from the
-//  current image dimensions, treating the specified dimension as a constraint.
+//
+//	current image dimensions, treating the specified dimension as a constraint.
 func (it *Image) Resize(opts ResizeOptions) error {
 	if opts.Interpretation == 0 {
 		opts.Interpretation = InterpretationSRGB
@@ -434,6 +436,26 @@ func (it *Image) Flatten(background RGBAProvider) error {
 // Gamma applies the given gamma value to the current image.
 func (it *Image) Gamma(gamma float64) error {
 	if image, err := vipsGamma(it.image, gamma); err != nil {
+		return err
+	} else {
+		it.updateImage(image)
+		return nil
+	}
+}
+
+// Brightness applies the given brightness value to the current image.
+func (it *Image) Brightness(brightness float64) error {
+	if image, err := vipsBrightness(it.image, brightness); err != nil {
+		return err
+	} else {
+		it.updateImage(image)
+		return nil
+	}
+}
+
+// Contrast applies the given contrast value to the current image.
+func (it *Image) Contrast(contrast float64) error {
+	if image, err := vipsContrast(it.image, contrast); err != nil {
 		return err
 	} else {
 		it.updateImage(image)
