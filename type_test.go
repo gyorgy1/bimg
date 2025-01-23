@@ -25,7 +25,7 @@ func TestDeterminateImageType(t *testing.T) {
 		{"test2.heic", HEIF, true},
 		{"test3.heic", HEIF, true},
 		{"test.avif", AVIF, true},
-		{"test.bmp", MAGICK, true},
+		{"test.bmp", MAGICK, vipsVersionMin(8, 13)},
 	}
 
 	for _, file := range files {
@@ -57,13 +57,13 @@ func TestDeterminateImageTypeName(t *testing.T) {
 		{"test.png", "png", true},
 		{"test.webp", "webp", true},
 		{"test.gif", "gif", true},
-		{"test.pdf", "pdf", true},
+		{"test.pdf", "pdf", vipsVersionMin(8, 12)},
 		{"test.svg", "svg", true},
 		{"test.jp2", "jp2k", vipsVersionMin(8, 11)},
 		{"test.jxl", "jxl", vipsVersionMin(8, 11)},
 		{"test.heic", "heif", true},
 		{"test.avif", "avif", true},
-		{"test.bmp", "magick", true},
+		{"test.bmp", "magick", vipsVersionMin(8, 13)},
 	}
 
 	for _, file := range files {
@@ -94,7 +94,7 @@ func TestIsTypeSupported(t *testing.T) {
 		{PNG, true},
 		{WEBP, true},
 		{GIF, true},
-		{PDF, true},
+		{PDF, vipsVersionMin(8, 12)},
 		{HEIF, true},
 		{AVIF, true},
 		{JP2K, vipsVersionMin(8, 11)},
@@ -120,7 +120,7 @@ func TestIsTypeNameSupported(t *testing.T) {
 		{"png", true, true},
 		{"webp", true, true},
 		{"gif", true, true},
-		{"pdf", true, true},
+		{"pdf", true, vipsVersionMin(8, 12)},
 		{"heif", true, true},
 		{"avif", true, true},
 		{"jp2k", true, vipsVersionMin(8, 11)},

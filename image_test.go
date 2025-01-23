@@ -533,17 +533,19 @@ func TestImage_ChangeColorspace(t *testing.T) {
 }
 
 func TestImageTransformation_Save(t *testing.T) {
-	t.Run("save bitmap", func(t *testing.T) {
-		img, err := NewImageFromFile(testfile("test.bmp"))
-		if err != nil {
-			t.Fatalf("cannot load image: %v", err)
-		}
-		if out, err := img.Save(SaveOptions{MagickFormat: "bmp"}); err != nil {
-			t.Errorf("cannot save image: %v", err)
-		} else {
-			_ = Write("testdata/transformation_save_bmp_out.bmp", out)
-		}
-	})
+	if vipsVersionMin(8, 13) {
+		t.Run("save bitmap", func(t *testing.T) {
+			img, err := NewImageFromFile(testfile("test.bmp"))
+			if err != nil {
+				t.Fatalf("cannot load image: %v", err)
+			}
+			if out, err := img.Save(SaveOptions{MagickFormat: "bmp"}); err != nil {
+				t.Errorf("cannot save image: %v", err)
+			} else {
+				_ = Write("testdata/transformation_save_bmp_out.bmp", out)
+			}
+		})
+	}
 }
 
 func TestFormatSupport(t *testing.T) {
@@ -590,31 +592,33 @@ func TestFormatSupport(t *testing.T) {
 		})
 	})
 
-	t.Run("pdf", func(t *testing.T) {
-		t.Run("can load", func(t *testing.T) {
-			img, err := NewImageFromFile(testfile("test.pdf"))
-			if err != nil {
-				t.Fatalf("cannot load the pdf: %v", err)
-			}
+	if vipsVersionMin(8, 12) {
+		t.Run("pdf", func(t *testing.T) {
+			t.Run("can load", func(t *testing.T) {
+				img, err := NewImageFromFile(testfile("test.pdf"))
+				if err != nil {
+					t.Fatalf("cannot load the pdf: %v", err)
+				}
 
-			size := img.Size()
-			if size.Height != 1050 || size.Width != 1680 {
-				t.Errorf("unexpected size: %#v", size)
-			}
+				size := img.Size()
+				if size.Height != 1050 || size.Width != 1680 {
+					t.Errorf("unexpected size: %#v", size)
+				}
+			})
+
+			t.Run("cannot save", func(t *testing.T) {
+				img, err := NewImageFromFile(testfile("test.pdf"))
+				if err != nil {
+					t.Fatalf("cannot load the pdf: %v", err)
+				}
+
+				_, err = img.Save(SaveOptions{})
+				if err == nil {
+					t.Error("saving should not work")
+				}
+			})
 		})
-
-		t.Run("cannot save", func(t *testing.T) {
-			img, err := NewImageFromFile(testfile("test.pdf"))
-			if err != nil {
-				t.Fatalf("cannot load the pdf: %v", err)
-			}
-
-			_, err = img.Save(SaveOptions{})
-			if err == nil {
-				t.Error("saving should not work")
-			}
-		})
-	})
+	}
 
 	// TODO add a table test for all expected formats
 }
