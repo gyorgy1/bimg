@@ -602,7 +602,7 @@ int vips_gamma_bridge(VipsImage *in, VipsImage **out, double exponent) {
 }
 
 int vips_addalpha_bridge(VipsImage *in, VipsImage **out) {
-	return vips_addalpha(in, out);
+	return vips_addalpha(in, out, NULL);
 }
 
 int vips_brightness_bridge(VipsImage *in, VipsImage **out, double k)
