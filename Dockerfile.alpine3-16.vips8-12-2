@@ -5,6 +5,7 @@ RUN apk add --no-cache \
     curl \
     build-base \
     go \
+    imagemagick-dev \
     vips-dev \
     vips-magick \
     vips-poppler
