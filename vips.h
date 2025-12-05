@@ -110,7 +110,7 @@ vips_affine_interpolator(VipsImage *in, VipsImage **out, double a, double b, dou
 
 int
 vips_jpegload_buffer_shrink(void *buf, size_t len, VipsImage **out, int shrink) {
-	return vips_jpegload_buffer(buf, len, out, "shrink", shrink, NULL);
+	return vips_jpegload_buffer(buf, len, out, "shrink", shrink, "fail_on", VIPS_FAIL_ON_TRUNCATED, NULL);
 }
 
 int
@@ -455,7 +455,7 @@ vips_init_image (void *buf, size_t len, int imageType, VipsImage **out) {
 	int code = 1;
 
 	if (imageType == JPEG) {
-		code = vips_jpegload_buffer(buf, len, out, "access", VIPS_ACCESS_RANDOM, NULL);
+		code = vips_jpegload_buffer(buf, len, out, "access", VIPS_ACCESS_RANDOM, "fail_on", VIPS_FAIL_ON_TRUNCATED, NULL);
 	} else if (imageType == PNG) {
 		code = vips_pngload_buffer(buf, len, out, "access", VIPS_ACCESS_RANDOM, NULL);
 	} else if (imageType == WEBP) {
